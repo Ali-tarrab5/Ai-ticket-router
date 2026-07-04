@@ -3,23 +3,23 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-import requests # Naya: API calls karne ke liye
+import requests
 
 from database import SessionLocal, TicketRecord
 
 app = FastAPI(title="AI Ticket Routing API with Cloud AI")
 
+# Bulletproof CORS - Sirf tumhara Vercel link allowed hai
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=["https://ai-ticket-router-three.vercel.app"], 
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 🔴 HUGGINGFACE CLOUD API SETUP
 HF_API_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-mnli"
-HF_TOKEN = os.getenv("HF_TOKEN") # Yahan apna token paste karo
+HF_TOKEN = os.getenv("HF_TOKEN") 
 headers = {"Authorization": f"Bearer {HF_TOKEN}"}
 
 DEPARTMENTS = ["Technical Support", "Billing", "Refunds", "General Inquiry"]
@@ -44,24 +44,30 @@ def home():
 
 @app.post("/predict")
 def route_ticket(ticket: TicketInput, db: Session = Depends(get_db)):
-    
-    # 1. Cloud AI se API ke zariye prediction mangwana
     payload = {
         "inputs": ticket.text,
         "parameters": {"candidate_labels": DEPARTMENTS}
     }
     
-    response = requests.post(HF_API_URL, headers=headers, json=payload)
-    ai_result = response.json()
-    
-    # Agar model internet par sleep mode mein ho toh shuru mein error aa sakta hai
-    if "error" in ai_result:
-        return {"error": "AI Model is waking up, please try again in 20 seconds!"}
+    # 🔴 FALLBACK LOGIC (Taake app DNS ki wajah se crash na ho)
+    try:
+        response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=10)
+        response.raise_for_status() 
+        ai_result = response.json()
         
-    prediction = ai_result['labels'][0]
-    confidence_score = ai_result['scores'][0] * 100
+        if "error" in ai_result:
+            prediction = "General Inquiry"
+            confidence_score = 0.0
+        else:
+            prediction = ai_result['labels'][0]
+            confidence_score = ai_result['scores'][0] * 100
+            
+    except Exception as e:
+        print(f"Render Network Block (Fallback Triggered): {e}")
+        prediction = "General Inquiry"
+        confidence_score = 0.0
     
-    # 2. Database mein Save karna
+    # Database Save
     db_ticket = TicketRecord(
         text=ticket.text,
         predicted_department=prediction,
@@ -76,7 +82,7 @@ def route_ticket(ticket: TicketInput, db: Session = Depends(get_db)):
         "ticket_id": db_ticket.id,
         "original_text": ticket.text,
         "routed_department": prediction,
-        "confidence_score": f"{round(confidence_score, 2)}%"
+        "confidence_score": f"{round(confidence_score, 2)}%" if confidence_score > 0 else "AI Unavailable"
     }
 
 @app.post("/feedback")
