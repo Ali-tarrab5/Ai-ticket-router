@@ -34,7 +34,8 @@ function App() {
 
     setLoading(true);
     try {
-      const response = await axios.post('http://127.0.0.1:8000/predict', {
+      // 🔴 NAYA LIVE BACKEND URL
+      const response = await axios.post('https://ai-ticket-router.onrender.com/predict', {
         text: ticketText
       });
 
@@ -50,7 +51,7 @@ function App() {
       setTicketText(''); 
     } catch (error) {
       console.error("API Error:", error);
-      alert("Backend se connect nahi ho paya!");
+      alert("Backend se connect nahi ho paya! Check console.");
     }
     setLoading(false);
   };
@@ -65,7 +66,8 @@ function App() {
     setTickets(updatedTickets);
 
     try {
-      await axios.post('http://127.0.0.1:8000/feedback', {
+      // 🔴 NAYA LIVE BACKEND URL
+      await axios.post('https://ai-ticket-router.onrender.com/feedback', {
         ticket_id: ticketId,
         corrected_department: newDepartment
       });
@@ -75,13 +77,11 @@ function App() {
     }
   };
 
-  // NAYA: Ticket Delete karne ka function
   const handleDelete = async (ticketId) => {
     try {
-      // 1. Backend database se delete karo
-      await axios.delete(`http://127.0.0.1:8000/tickets/${ticketId}`);
+      // 🔴 NAYA LIVE BACKEND URL
+      await axios.delete(`https://ai-ticket-router.onrender.com/tickets/${ticketId}`);
       
-      // 2. React UI se foran hata do
       setTickets(tickets.filter(ticket => ticket.id !== ticketId));
     } catch (error) {
       console.error("Delete Error:", error);
@@ -98,7 +98,7 @@ function App() {
             AI Support Ticket Router 🤖
           </h1>
           <p style={{ color: '#6b7280', fontSize: '16px' }}>
-            Contextual AI engine (BART) connected to live SQLite Database.
+            Contextual AI engine (BART) connected to live Cloud Database.
           </p>
         </div>
 
@@ -144,7 +144,6 @@ function App() {
                     )}
                   </div>
                   
-                  {/* NAYA: Dropdown aur Delete button ek sath */}
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <select 
                       value={ticket.department} 
