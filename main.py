@@ -12,15 +12,14 @@ app = FastAPI(title="AI Ticket Routing API with Cloud AI")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], 
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # 🔴 HUGGINGFACE CLOUD API SETUP
 HF_API_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-mnli"
-
-HF_TOKEN = os.getenv("HF_TOKEN")
+HF_TOKEN = os.getenv("HF_TOKEN") # Yahan apna token paste karo
 headers = {"Authorization": f"Bearer {HF_TOKEN}"}
 
 DEPARTMENTS = ["Technical Support", "Billing", "Refunds", "General Inquiry"]
