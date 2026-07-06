@@ -35,7 +35,7 @@ function App() {
     setLoading(true);
     try {
       // 🔴 NAYA LIVE BACKEND URL
-      const response = await axios.post('https://ai-ticket-router.onrender.com/predict', {
+      const response = await axios.post('https://aliturab5-ai-ticket-router.hf.space/predict', {
         text: ticketText
       });
 
@@ -67,7 +67,7 @@ function App() {
 
     try {
       // 🔴 NAYA LIVE BACKEND URL
-      await axios.post('https://ai-ticket-router.onrender.com/feedback', {
+      await axios.post('https://aliturab5-ai-ticket-router.hf.space/feedback', {
         ticket_id: ticketId,
         corrected_department: newDepartment
       });
@@ -80,7 +80,7 @@ function App() {
   const handleDelete = async (ticketId) => {
     try {
       // 🔴 NAYA LIVE BACKEND URL
-      await axios.delete(`https://ai-ticket-router.onrender.com/tickets/${ticketId}`);
+      await axios.delete(`https://aliturab5-ai-ticket-router.hf.space/tickets/${ticketId}`);
       
       setTickets(tickets.filter(ticket => ticket.id !== ticketId));
     } catch (error) {
